@@ -3,6 +3,7 @@ package com.example.a17010233.p07_ps_sms;
 
 import android.Manifest;
 import android.content.ContentResolver;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -27,7 +28,7 @@ public class FragmentWord extends Fragment {
 
     EditText etText;
     TextView tvDisplay;
-    Button btnRetrieve;
+    Button btnRetrieve, btnEmail;
 
 
     public FragmentWord() {
@@ -39,11 +40,12 @@ public class FragmentWord extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_word, container,false);
+        View view = inflater.inflate(R.layout.fragment_word, container, false);
 
         etText = view.findViewById(R.id.etText);
         tvDisplay = view.findViewById(R.id.tvDisplay);
         btnRetrieve = view.findViewById(R.id.btnRetrieve);
+        btnEmail = view.findViewById(R.id.btnEmail);
 
         btnRetrieve.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -75,34 +77,56 @@ public class FragmentWord extends Fragment {
                 ContentResolver cr = getActivity().getContentResolver();
 
                 // The filter String
-                String filter="body LIKE ?";
+                //  String filter = "body LIKE ?";
                 // The matches for the ?
+                // String[] filterArgs = {"%" + etText.getText().toString() + "%"};
 
-                String[] filterArgs = {"%" +  etText.getText().toString() + "%"};
-                // Fetch SMS Message from Built-in Content Provider
+                String word = etText.getText().toString();
+                String[] words = word.trim().split(" ");
 
-                // Fetch SMS Message from Built-in Content Provider
-                Cursor cursor = cr.query(uri, reqCols, filter, filterArgs, null);
                 String smsBody = "";
-                if (cursor.moveToFirst()) {
-                    do {
-                        long dateInMillis = cursor.getLong(0);
-                        String date = (String) DateFormat
-                                .format("dd MMM yyyy h:mm:ss aa", dateInMillis);
-                        String address = cursor.getString(1);
-                        String body = cursor.getString(2);
-                        String type = cursor.getString(3);
-                        if (type.equalsIgnoreCase("1")) {
-                            type = "Inbox:";
-                        } else {
-                            type = "Sent:";
-                        }
-                        smsBody += type + " " + address + "\n at " + date
-                                + "\n\"" + body + "\"\n\n";
-                    } while (cursor.moveToNext());
+
+                for (int i = 0; i < words.length; i++) {
+                    String filter = "body LIKE ?";
+                    // The matches for the ?
+                    String[] filterArgs = {"%" + words[i] + "%"};
+
+                    // Fetch SMS Message from Built-in Content Provider
+                    Cursor cursor = cr.query(uri, reqCols, filter, filterArgs, null);
+                    if (cursor.moveToFirst()) {
+                        do {
+                            long dateInMillis = cursor.getLong(0);
+                            String date = (String) DateFormat
+                                    .format("dd MMM yyyy h:mm:ss aa", dateInMillis);
+                            String address = cursor.getString(1);
+                            String body = cursor.getString(2);
+                            String type = cursor.getString(3);
+                            if (type.equalsIgnoreCase("1")) {
+                                type = "Inbox:";
+                            } else {
+                                type = "Sent:";
+                            }
+                            smsBody += type + " " + address + "\n at " + date
+                                    + "\n\"" + body + "\"\n\n";
+                        } while (cursor.moveToNext());
+                    }
                 }
                 tvDisplay.setText(smsBody);
             }
+        });
+
+        btnEmail.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent email = new Intent(Intent.ACTION_SEND);
+                email.putExtra(Intent.EXTRA_EMAIL, new String[]{"17010233@myrp.edu.sg"});
+                email.putExtra(Intent.EXTRA_SUBJECT, "SMS Message");
+                email.putExtra(Intent.EXTRA_TEXT, tvDisplay.getText().toString());
+
+                email.setType("message/rfc822");
+                startActivity(Intent.createChooser(email, "Choose an Email client: "));
+            }
+
         });
 
 

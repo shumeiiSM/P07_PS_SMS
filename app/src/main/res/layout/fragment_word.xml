@@ -28,8 +28,15 @@
         android:layout_height="wrap_content"
         android:text="Retrieve SMS" />
 
+    <Button
+        android:id="@+id/btnEmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Email" />
+
     <TextView
         android:id="@+id/tvDisplay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
+
 </LinearLayout>
